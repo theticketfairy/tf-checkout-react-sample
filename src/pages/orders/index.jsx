@@ -1,7 +1,7 @@
 import React from "react";
 import { MyTicketsContainer } from "tf-checkout-react";
 import Layout from "../../components/Layout";
-import { setTfCheckoutReactConfigs } from "../../../tf-checkout-config";
+import { setTfCheckoutReactConfigs } from "../../utils/tf-checkout-config";
 
 setTfCheckoutReactConfigs()
 

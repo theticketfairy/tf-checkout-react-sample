@@ -2,7 +2,8 @@ import React, { useState } from 'react'
 import { LoginModal, ForgotPasswordModal } from 'tf-checkout-react'
 import Header /*, { X_TF_ECOMMERCE } */ from '../header/index'
 import Footer from '../footer/index'
-import { setTfCheckoutReactConfigs } from '../../../tf-checkout-config'
+import { setTfCheckoutReactConfigs } from '../../utils/tf-checkout-config'
+import { isBrowser } from '../../utils/isBrowser'
 // import { getCookieByName } from '../../utils/cookies'
 
 setTfCheckoutReactConfigs()
@@ -10,11 +11,7 @@ setTfCheckoutReactConfigs()
 const Layout = ({ children }) => {
   const [showLogin, setShowLogin] = useState(false)
   const [showResetPasswordModal, setShowResetPasswordModal] = useState(false)
-  const isWindowDefined = typeof window !== 'undefined'
   const [isLogged, setIsLogged] = useState(false)
-/*   const [isLogged, setIsLogged] = useState(
-    isWindowDefined ? !!getCookieByName(X_TF_ECOMMERCE) : false
-  ) */
   
   const onClose = () => {
     setShowLogin(false)
@@ -23,7 +20,7 @@ const Layout = ({ children }) => {
   const handleOnLogin = (e) => {
     setShowLogin(false)
     setIsLogged(true)
-    if(isWindowDefined){
+    if(isBrowser){
       if(window.location.pathname?.includes('billing')){
         window.location.reload();
       }

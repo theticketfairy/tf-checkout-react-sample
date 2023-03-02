@@ -1,11 +1,11 @@
 import React from "react";
 import { TicketsContainer } from "tf-checkout-react";
-import { setTfCheckoutReactConfigs } from "../../../tf-checkout-config";
+import { setTfCheckoutReactConfigs } from "../../utils/tf-checkout-config";
 import Layout from "../../components/Layout";
 import { getEvent } from "../../http_service/events";
+import { isBrowser } from "../../utils/isBrowser";
 
 setTfCheckoutReactConfigs()
-const isWindowDefined = typeof window !== 'undefined'
 
 const handleCartSuccessRedirect = (
   skip_billing_page,
@@ -21,18 +21,18 @@ const handleCartSuccessRedirect = (
   collect_optional_wallet_address
 ) => {
   if (skip_billing_page) {
-    isWindowDefined &&
+    isBrowser &&
       window.localStorage.setItem(
         'checkoutData',
         JSON.stringify({ hash, total }),
       )
     window.location.href = `/billing/checkout?event_id=${event_id}`
   } else {
-    event_id && isWindowDefined
+    event_id && isBrowser
       ? window.location.assign(
         `/billing/billing-info?phone_required=${phone_required}&age_required=${age_required}&names_required=${names_required}&hide_phone_field=${hide_phone_field}&event_id=${event_id}&free_ticket=${free_ticket}&collect_mandatory_wallet_address=${collect_mandatory_wallet_address}&collect_optional_wallet_address=${collect_optional_wallet_address}`,
       )
-      : isWindowDefined &&
+      : isBrowser &&
       window.location.assign(
         `/billing/billing-info?phone_required=${phone_required}&age_required=${age_required}&names_required=${names_required}&hide_phone_field=${hide_phone_field}&free_ticket=${free_ticket}&collect_mandatory_wallet_address=${collect_mandatory_wallet_address}&collect_optional_wallet_address=${collect_optional_wallet_address}`,
       )
@@ -44,7 +44,7 @@ const Event = ({ serverData }) => {
   return <Layout>
     <TicketsContainer
       theme="light"
-      eventId={12145}
+      eventId={98}
       handleNotInvitedModalClose={() => { }}
       handleInvalidLinkModalClose={() => { }}
       onAddToCartSuccess={({

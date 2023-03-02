@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { ENV } from '../../env'
+import { ENV } from '../constants/env'
 
 const headers = {
     Accept: 'application/vnd.api+json',

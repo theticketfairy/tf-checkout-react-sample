@@ -1,11 +1,14 @@
 import * as React from "react"
 import { navigate } from 'gatsby'
-import { setTfCheckoutReactConfigs } from '../../tf-checkout-config'
+import { setTfCheckoutReactConfigs } from '../utils/tf-checkout-config'
+import { useEffect } from "react"
 
 setTfCheckoutReactConfigs()
 
 const IndexPage = () => {
-  navigate('/events/ash-s-test-event/?eventId=12145')
+  useEffect(() => {
+    navigate('/events/ash-s-test-event/?eventId=98')
+  }, [])
   
   return (
     <main>

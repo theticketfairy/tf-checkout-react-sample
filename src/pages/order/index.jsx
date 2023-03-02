@@ -1,6 +1,6 @@
 import React from "react";
 import { OrderDetailsContainer } from "tf-checkout-react";
-import { setTfCheckoutReactConfigs } from "../../../tf-checkout-config";
+import { setTfCheckoutReactConfigs } from "../../utils/tf-checkout-config";
 
 setTfCheckoutReactConfigs()
 

@@ -1,5 +1,6 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { Link } from 'gatsby'
+import { isBrowser } from '../../utils/isBrowser'
 // import { DASHBOARD_URL } from '../../constants'
 // import { deleteCookieByName, getCookieByName } from '../../utils/cookies'
 
@@ -8,12 +9,10 @@ import { Link } from 'gatsby'
 const Header = ({ setShowLogin, isLogged, setIsLogged }) => {
   const [isNavExpanded, setIsNavExpanded] = useState(false)
 
-  const isWindowDefined = useRef(typeof window !== 'undefined')
-
   const handleLogout = async () => {
     // deleteCookieByName(X_TF_ECOMMERCE)
 
-    if (isWindowDefined.current) {
+    if (isBrowser) {
       window.localStorage.removeItem('access_token')
       window.localStorage.removeItem('user_data')
       setIsLogged(false)
@@ -38,11 +37,8 @@ const Header = ({ setShowLogin, isLogged, setIsLogged }) => {
   )
 
   useEffect(() => {
-    const isWindowDefined = typeof window !== 'undefined'
     // const xTfEcommerce = getCookieByName(X_TF_ECOMMERCE)
-    const accessToken = isWindowDefined
-      ? window.localStorage.getItem('access_token')
-      : null
+    const accessToken = window.localStorage.getItem('access_token')
 
     if (!isLogged && (/* xTfEcommerce || */ accessToken)) {
       setIsLogged(true)
@@ -50,20 +46,16 @@ const Header = ({ setShowLogin, isLogged, setIsLogged }) => {
   }, [isLogged, setIsLogged])
 
   useEffect(() => {
-    if (isWindowDefined.current) {
-      window.document.addEventListener('tf-login', handleLogin)
-      return () => {
-        window.document.removeEventListener('tf-login', handleLogin)
-      }
+    window.document.addEventListener('tf-login', handleLogin)
+    return () => {
+      window.document.removeEventListener('tf-login', handleLogin)
     }
   }, [handleLogin])
 
   useEffect(() => {
-    if (isWindowDefined.current) {
-      window.document.addEventListener('tf-logout', handleLogin)
-      return () => {
-        window.document.removeEventListener('tf-logout', handleLogin)
-      }
+    window.document.addEventListener('tf-logout', handleLogin)
+    return () => {
+      window.document.removeEventListener('tf-logout', handleLogin)
     }
   }, [handleLogin])
 

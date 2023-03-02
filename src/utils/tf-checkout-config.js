@@ -1,5 +1,5 @@
 import { setConfigs } from 'tf-checkout-react'
-import { ENV } from './env';
+import { ENV } from '../constants/env'
 
 export const setTfCheckoutReactConfigs = () => {
   setConfigs(ENV)

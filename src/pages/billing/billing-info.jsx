@@ -1,6 +1,6 @@
 import React, { useState } from "react"
 import { BillingInfoContainer } from "tf-checkout-react"
-import { setTfCheckoutReactConfigs } from "../../../tf-checkout-config"
+import { setTfCheckoutReactConfigs } from "../../utils/tf-checkout-config"
 import Layout from "../../components/Layout"
 
 setTfCheckoutReactConfigs()
