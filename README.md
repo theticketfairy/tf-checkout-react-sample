@@ -6,6 +6,10 @@
 - [tf-checkout-react-sample](#tf-checkout-react-sample)
 - [Introduction](#introduction)
 - [Prerequisites](#prerequisites)
+- [Installation](#installation)
+  - [Set configuration](#set-configuration)
+    - [Configurations for production](#configurations-for-production)
+    - [Configurations for development](#configurations-for-development)
 - [Components](#components)
   - [`TicketsContainer`](#ticketscontainer)
   - [`AddOnsContainer`](#addonscontainer)
@@ -51,6 +55,49 @@ Together, these components and functionalities provide a comprehensive set of to
 
 - node >= v16.19.0
 - npm >= 8.19.3
+
+&nbsp;
+
+# Installation
+
+```
+npm i tf-checkout-react
+```
+
+- [Release Notes](https://github.com/theticketfairy/tf-checkout-react/releases)
+- [Available Versions List](https://www.npmjs.com/package/tf-checkout-react?activeTab=versions)
+
+## Set configuration
+
+In order to make this package work properly, you need to set some configurations, otherwise the default configurations will be used. Currently only configuration which is needed for production, is `API_BASE`. Other configurations written below are only for development/test environments.
+
+Import `setConfigs` function from the package.
+
+```
+import { setConfigs } from 'tf-checkout-react'
+```
+
+Call it in the root and pass neccesary options. Here are available options:
+
+### Configurations for production
+
+- API_BASE - need for making API calls (default: `https://www.ticketfairy.com`)
+
+### Configurations for development
+
+- API_BASE - need for making API calls
+- BRAND_SLUG - slug of the event's parent/owner brand
+- X_SOURCE_ORIGIN - need for local environment. This header will be included in every API request.
+- STRIPE_PUBLISHABLE_KEY - used to authenticate website with Stripe and to communicate securely with Stripe's servers.
+
+Example `.env` file:
+```
+GATSBY_TTF_PUBLIC_API_BASE=https://www.ticketfairy.com
+GATSBY_TTF_BASE_URL=https://www.ticketfairy.com
+GATSBY_TTF_PUBLIC_X_SOURCE_ORIGIN=ticketfairy.com
+GATSBY_TTF_BRAND_SLUG=brand-slug
+GATSBY_TTF_SITE_URL=https://www.ticketfairy.com
+```
 
 &nbsp;
 # Components

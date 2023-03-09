@@ -1,5 +1,4 @@
 export const ENV = {
-  BASE_URL: process.env.GATSBY_TTF_BASE_URL,
   API_BASE: process.env.GATSBY_TTF_PUBLIC_API_BASE,
   X_SOURCE_ORIGIN: process.env.GATSBY_TTF_PUBLIC_X_SOURCE_ORIGIN,
   CLIENT_ID: process.env.GATSBY_TTF_CLIENT_ID,
