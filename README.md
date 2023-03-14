@@ -64,7 +64,6 @@ Together, these components and functionalities provide a comprehensive set of to
 npm i tf-checkout-react
 ```
 
-- [Release Notes](https://github.com/theticketfairy/tf-checkout-react/releases)
 - [Available Versions List](https://www.npmjs.com/package/tf-checkout-react?activeTab=versions)
 
 ## Set configuration
