@@ -486,9 +486,6 @@ To use this component, simply import it and include it in your JSX with the requ
 
 ***Note that package automatically calls component in [`TicketsContainer`](#ticketscontainer)***.
 
-In the above example, the `PromoCodeSection` component is imported and used within the ExampleComponent. The component's state and callback functions are managed by the parent component (__package automatically calls component in [`TicketsContainer`](#ticketscontainer)__).
-
-
 
 <details open>
 <summary><b>Promo Code Props Interface:</b></summary>
