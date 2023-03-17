@@ -17,6 +17,7 @@
   - [`PaymentContainer`](#paymentcontainer)
   - [`ConfirmationContainer`](#confirmationcontainer)
   - [`MyTicketsContainer`](#myticketscontainer)
+  - [Order Details Container](#order-details-container)
 - [Functionalities](#functionalities)
   - [Login](#login)
   - [Register](#register)
@@ -24,6 +25,7 @@
   - [Promo Code](#promo-code)
   - [Access Code](#access-code)
   - [Waiting List](#waiting-list)
+  - [Pixel Usage](#pixel-usage)
 
 </details>
 &nbsp;
@@ -104,8 +106,41 @@ GATSBY_TTF_SITE_URL=https://www.ticketfairy.com
 
 ## `TicketsContainer`
 
-Tickets component will retrieve and show a list of tickets corresponding to selected event. It also containes `PromoCode`, `AccessCode` and `WaitingLsit` functionalities.  
+Tickets component will retrieve and show a list of tickets corresponding to selected event,
+which allows the user to select the desired ticket type and quantity.
+
+The __"Get Tickets"__ button which name is also customizable, allows the user to add the selected tickets to their cart and proceed to the checkout process.<br />
+Other buttons can be displayed to handle various actions, such as viewing the user's orders or logging out.
+
+Tickets component provides a section for entering an [Access Code](#access-code) or [Promo Code](#promo-code) that applies a discount to the ticket price or hide/unhide some tickets via [Access Code](#access-code).<br />
+It also containes `WaitingLsit` that manages and displays waiting list functionality for the event.<br />
 Props interface partially extends [Promo Code Props Interface](#promo-code), [Access Code Props Interface](#access-code), [Waiting List Props Interface](#waiting-list).
+
+Tickets component displays a list of the top influencers who have promoted the event.
+
+Tickets component is flexible and customizable, allowing for different layouts and behaviors depending on the event's requirements.
+
+___Example of usage___:
+```jsx
+
+import { TicketsContainer } from 'tf-checkout-react'
+
+<TicketsContainer
+  theme="light"
+  eventId={event?.id}
+  handleNotInvitedModalClose={() => { }}
+  handleInvalidLinkModalClose={() => { }}
+  onAddToCartSuccess={() => {}}
+  isPromotionsEnabled={event?.is_promotions_enabled}
+  isAccessCodeEnabled={event?.is_access_code}
+  onLogoutSuccess={() => {}}
+  hideSessionButtons={true}
+  enableAddOns={false}
+  showGroupNameBlock={true}
+  tableTicketsHeaderComponent={<div className="tickets-container-header">RESERVE TABLES</div>}
+  onPendingVerification={() => {}}
+/>
+```
 
 <details open>
   <summary><b>Tickets Container Props Interface</b></summary>
@@ -160,7 +195,7 @@ Props interface partially extends [Promo Code Props Interface](#promo-code), [Ac
 Add-Ons component will retrieve and show a list of add-ons corresponding to selected event.
 
 <details open>
-  <summary><b>Tickets Container Props Interface</b></summary>
+  <summary><b>Add-Ons Container Props Interface</b></summary>
 
 | Property                    | Type            | Required | Default value  | Description                                                                                          |
 | --------------------------- | --------------- | -------- | -------------- | ---------------------------------------------------------------------------------------------------- |
@@ -184,6 +219,8 @@ Add-Ons component will retrieve and show a list of add-ons corresponding to sele
 ## `BillingInfoContainer`
 The component is responsible for managing the billing information during the checkout process. It provides a form that allows users to enter their billing information, including addresses and ticket holders' information.  
 Props interface extends [Login Modal Interface](#login), [Register Modal Interface](#register), [Forgot Password Modal Interface](#forgot-password).
+
+Component includes also phone field, which validation functionality is provided by Twilio and integrated into the component. It provides an additional layer of verification and security during the ticket purchase process.
 
 <details open>
 
@@ -313,25 +350,86 @@ The component is responsible for rendering a list of orders with details and som
 
 &nbsp;
 
+
+## Order Details Container
+
+Will show the purchased order details. Contains `order PDF download` and `ticket resale` functionalities. Currently both functionalities are enabled by default.
+
+<details open>
+  <summary><b>Order Container Props Interface:</b></summary>
+
+| Property                  | Type                      | Required | Default Value              | Description                                                                              |
+| ------------------------- | ------------------------- | -------- | -------------------------- | ---------------------------------------------------------------------------------------- |
+| columns                   | [ { label: string } ]     | yes      | []                         | Order details table’s columns’ labels.                                                   |
+| ticketsTableColumns       | ITicketsTableColumns[]    | no       | defaultTicketsTableColumns | Order’s tickets table’s columns.                                                         |
+| displayColumnNameInRow    | boolean                   | no       | false                      | Display column’s names in row, instead of table header.                                  |
+| canSellTicket             | boolean                   | no       | true                       | A boolean value indicating whether the user can sell tickets.                            |
+| ordersPath                | string                    | no       | '/orders'                  | A string representing the URL of the `MyTicketrsContainer` page.                         |
+| orderId                   | string or number          | no       |                            | A string or number representing the ID of the order to be displayed.                     |
+| referralTitle             | string                    | no       | ""                         | A string representing the title of the referral section.                                 |
+| itemsTitle                | string                    | no       | ""                         | A string representing the title of the items section.                                    |
+| ticketsTitle              | string                    | no       | "Your Tickets"             | A string representing the title of the tickets table section.                            |
+| personalLinkIcon          | string                    | no       | “”                         | Custom icon to display near personal share link.                                         |
+| onGetOrdersSuccess        | Function: (data) => void  | no       | value => value             | Called after fetching order data request’s success.                                      |
+| onGetOrdersError          | Function: (error) => void | no       | value => value             | Called after fetching order data request’s failure.                                      |
+| onResaleTicketSuccess     | Function: (data) => void  | no       | value => value             | Called after resale ticket request’s success.                                            |
+| onResaleTicketError       | Function: (error) => void | no       | value => value             | Called after resale ticket request’s failure.                                            |
+| onRemoveFromResaleSuccess | Function: (data) => void  | no       | value => value             | Called after remove from resale ticket request’s success.                                |
+| onRemoveFromResaleError   | Function: (error) => void | no       | value => value             | Called after remove from resale ticket request’s failure.                                |
+| onReturnButtonClick       | Function: () => void      | no       | N/A                        | Called on “Return” button click. If not passed, button click will redirect to ‘/orders’. |
+
+</details>
+
+&nbsp;
+
+
 # Functionalities
 
 ## Login
 
+The `LoginModal` component is designed to be used inside package to authenticate users.  <br /> To use the `LoginModal`, simply include it in your React component and pass in the required __onLogin__ and __onClose__ callbacks as props.
+
+You can authenticate users from the Billing page too, here you can either provide __onLogin__ callback as a prop to the [`BillingInfoContainer`](#billinginfocontainer) component so that you can open your custom component for authentication or you can ommit it and the package inside provided `LoginModal` component will be called and opened.
+
+Package can detect whether a user is logged in or not by checking for the presence of the __X-TF-ECOMMERCE__ cookie, which is automatically set by the system when the user successfully logs in. If the __X-TF-ECOMMERCE__ cookie is present, the package assumes that the user is logged in and displays the appropriate content.
+
+The `LoginModal` component also is used in [`MyTicketsContainer`](#myticketscontainer) and  [`TicketsContainer`](#ticketscontainer).
+
+To detect whether a user is logged in or not, you can use the __useCookieListener__ hook provided by the package.
+Here's an example of how to use the __useCookieListener__ hook to automatically detect whether the user is logged in:
+
+```jsx
+import { useEffect, useRef, useState } from 'react'
+import { useCookieListener } from 'tf-checkout-react'
+
+const MyComponent = () => {
+  const [isLogged, setIsLogged] = useState(false)
+
+  // Listen for changes to the __X-TF-ECOMMERCE__ cookie
+  useCookieListener("X_TF_ECOMMERCE", value => setIsLogged(Boolean(value)))
+
+  // ... rest of component logic
+}
+```
+
 <details open>
 <summary><b>Login Modal Props Interface:</b></summary>
 
-| Property                 | Type                | Required | Default Value                   | Description                                                                         |
-| ------------------------ | ------------------- | -------- | ------------------------------- | ----------------------------------------------------------------------------------- |
-| onLogin                  | () => void          | yes      | N/A                             | Called after log in request’s success.                                              |
-| onClose                  | () => void          | yes      | N/A                             | Called on modal close.                                                              |
-| onGetProfileDataSuccess  | (data) => void      | no       | value => value                  | A callback function that is called when the profile data is successfully retrieved. |
-| onGetProfileDataError    | (error) => void     | no       | value => value                  | A callback function that is called when retrieving the profile data fails.          |
-| onForgotPassword         | () => void          | no       | value => value                  | Called on “Forgot Password” button click.                                           |
-| onSignup                 | () => void          | no       | value => value                  | Called on “Sign Up” button click.                                                   |
-| modalClassname           | string              | no       | " "                             | Login modal main container class.                                                   |
-| logo                     | string / URL / path | no       | TheTicketFairy black logo (URL) | Login modal top section’s logo.                                                     |
-| showForgotPasswordButton | boolean             | no       | false                           | Display “Forgot Password” button.                                                   |
-| showSignUpButton         | boolean             | no       | false                           | Display “Sign Up” button.                                                           |
+| Property                 | Type                | Required | Default Value                   | Description                                                                                                                 |
+| ------------------------ | ------------------- | -------- | ------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| onLogin                  | () => void          | yes      | N/A                             | Called after the user successfully authorizes.                                                                              |
+| onClose                  | () => void          | yes      | N/A                             | Called on modal close.                                                                                                      |
+| onGetProfileDataSuccess  | (data) => void      | no       | value => value                  | A callback function that is called when the profile data is successfully retrieved.                                         |
+| onGetProfileDataError    | (error) => void     | no       | value => value                  | A callback function that is called when retrieving the profile data fails.                                                  |
+| onForgotPassword         | () => void          | no       | value => value                  | Called on “Forgot Password” button click.                                                                                   |
+| onSignup                 | () => void          | no       | value => value                  | Called on “Sign Up” button click.                                                                                           |
+| modalClassname           | string              | no       | " "                             | Login modal main container class.                                                                                           |
+| logo                     | string / URL / path | no       | TheTicketFairy black logo (URL) | Login modal top section’s logo.                                                                                             |
+| showForgotPasswordButton | boolean             | no       | false                           | Display “Forgot Password” button.                                                                                           |
+| showSignUpButton         | boolean             | no       | false                           | Display “Sign Up” button.                                                                                                   |
+| showPoweredByImage       | boolean             | no       | false                           | Whether or not to show the <a href="https://cdn-checkout.s3.us-east-2.amazonaws.com/IconTicketFairy.svg">Powered image</a>. |
+| alreadyHasUser           | boolean             | no       | false                           | Whether or not to show the "email is already attached to an account" message block.                                         |
+| userExpired              | boolean             | no       | false                           | Whether or not to show the "session expired" message block.                                                                 |
 
 </details>
 
@@ -339,15 +437,20 @@ The component is responsible for rendering a list of orders with details and som
 
 ## Register
 
+The `RegisterModal` component is designed to be used inside package to allows users to register for an account.  <br />
+
+When the user submits the form, the component calls the register API function to create the user's account. If account creation is successful, the component then retrieves the user's profile data. The __onGetProfileDataSuccess__ and __onGetProfileDataError__ callbacks are then called depending on whether the profile data retrieval succeeds or fails. If profile data retrieval succeeds, the component maps the profile data to a format used by the application and saves the resulting data to the browser's localStorage. Finally, the __onClose__ callback is called to close the modal.
+
 <details open>
 <summary><b>Register Modal Props Interface:</b></summary>
 
-| Property                | Type            | Required | Default Value  | Description                                                                         |
-| ----------------------- | --------------- | -------- | -------------- | ----------------------------------------------------------------------------------- |
-| onRegister (deprecated) | () => void      | no       | N/A            | -                                                                                   |
-| onClose                 | () => void      | yes      | N/A            | Called on modal close, after register request's success.                            |
-| onGetProfileDataSuccess | (data) => void  | no       | value => value | A callback function that is called when the profile data is successfully retrieved. |
-| onGetProfileDataError   | (error) => void | no       | value => value | A callback function that is called when retrieving the profile data fails.          |
+| Property                | Type            | Required | Default Value  | Description                                                                                                                 |
+| ----------------------- | --------------- | -------- | -------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| onRegister (deprecated) | () => void      | no       | N/A            | -                                                                                                                           |
+| onClose                 | () => void      | yes      | N/A            | Called on modal close, after register request's success.                                                                    |
+| onGetProfileDataSuccess | (data) => void  | no       | value => value | A callback function that is called when the profile data is successfully retrieved.                                         |
+| onGetProfileDataError   | (error) => void | no       | value => value | A callback function that is called when retrieving the profile data fails.                                                  |
+| showPoweredByImage      | boolean         | no       | false          | Whether or not to show the <a href="https://cdn-checkout.s3.us-east-2.amazonaws.com/IconTicketFairy.svg">Powered image</a>. |
 
 </details>
 
@@ -355,20 +458,33 @@ The component is responsible for rendering a list of orders with details and som
 
 ## Forgot Password
 
+The `ForgotPasswordModal` component is a modal dialog for users to reset their passwords. To use it, simply import the component, manage its open state, and provide callback functions for closing the modal, navigating back to the login page or component, handling successful password reset requests, and handling errors in password reset requests. Optionally, you can also display a "Powered By" image within the modal by setting the __showPoweredByImage__ prop to true.
+
 <details open>
 <summary><b>Forgot Password Modal Props Interface:</b></summary>
 
-| Property                | Type            | Required | Default Value  | Description                                                                          |
-| ----------------------- | --------------- | -------- | -------------- | ------------------------------------------------------------------------------------ |
-| onLogin                 | () => void      | yes      | N/A            | Called on "Back to Log In" button click.                                             |
-| onClose                 | () => void      | yes      | N/A            | Called on modal close, after register request's success.                             |
-| onForgotPasswordSuccess | (data) => void  | no       | value => value | A callback function that is called when the user successfully resets their password. |
-| onForgotPasswordError   | (error) => void | no       | value => value | A callback function that is called when there is an error resetting the password.    |
+| Property                | Type            | Required | Default Value  | Description                                                                                                                 |
+| ----------------------- | --------------- | -------- | -------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| onLogin                 | () => void      | yes      | N/A            | Called on "Back to Log In" button click.                                                                                    |
+| onClose                 | () => void      | yes      | N/A            | Called on modal close, after register request's success.                                                                    |
+| onForgotPasswordSuccess | (data) => void  | no       | value => value | A callback function that is called when the user successfully resets their password.                                        |
+| onForgotPasswordError   | (error) => void | no       | value => value | A callback function that is called when there is an error resetting the password.                                           |
+| showPoweredByImage      | boolean         | no       | false          | Whether or not to show the <a href="https://cdn-checkout.s3.us-east-2.amazonaws.com/IconTicketFairy.svg">Powered image</a>. |
 
 </details>
 &nbsp;
 
 ## Promo Code
+
+The `PromoCodeSection` is a React component for handling promo code input, validation, and displaying success or error messages. It accepts various props to control its appearance and behavior, such as the promo code value, validation status, input visibility, and callback functions for updating the state which you can see in the below provided table.
+
+To use this component, simply import it and include it in your JSX with the required props, managing the component's state and callback functions in the parent component as needed.
+
+***Note that package automatically calls component in [`TicketsContainer`](#ticketscontainer)***.
+
+In the above example, the `PromoCodeSection` component is imported and used within the ExampleComponent. The component's state and callback functions are managed by the parent component (__package automatically calls component in [`TicketsContainer`](#ticketscontainer)__).
+
+
 
 <details open>
 <summary><b>Promo Code Props Interface:</b></summary>
@@ -393,6 +509,12 @@ The component is responsible for rendering a list of orders with details and som
 
 ## Access Code
 
+The `AccessCodeSection` is a React component designed for handling access code input and submission. It allows users to enter an access code and triggers an update to the ticket information based on the submitted access code. The component accepts a set of props to manage the access code value and provide callback functions for updating the state which you can see in below table.
+
+To integrate the `AccessCodeSection` component, import it into your JSX and provide the required props, such as the access code value, and callback functions for updating the state. Make sure to manage the component's state and callback functions within the parent component as needed. <br /> 
+
+***Note that package automatically calls component in [`TicketsContainer`](#ticketscontainer)***.
+
 <details open>
 <summary><b>Access Code Props Interface:</b></summary>
 
@@ -408,6 +530,10 @@ The component is responsible for rendering a list of orders with details and som
 
 ## Waiting List
 
+The `WaitingList` component is a React component designed to handle user registration for a waiting list. It displays a form that allows users to input their information, including first name, last name, email, ticket type, and quantity. Upon submission, the component adds the user to the waiting list and displays a success message.
+
+***Note that package automatically calls component in [`TicketsContainer`](#ticketscontainer)***.
+
 <details open>
 <summary><b>Waiting List Props Interface:</b></summary>
 
@@ -418,5 +544,20 @@ The component is responsible for rendering a list of orders with details and som
 | defaultMaxQuantity | number          | yes      | 10            | The default maximum quantity of tickets that can be selected. |
 
 </details>
+
+&nbsp;
+
+## Pixel Usage
+
+The `usePixel` hook is a utility function used to load a pixel script for tracking events on the page. It is commonly used in multiple components throughout the application to track various user actions, such as the completion of a checkout or a purchase. <br />
+
+The purpose of the `usePixel` hook is to enable event tracking and analytics for various user actions within the application.
+
+Here is the list of pages where the `usePixel` function is automatically used:
+
+- Billing Info Container
+- Confirmation Container
+- Payment Container
+- Tickets Container
 
 &nbsp;
