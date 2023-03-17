@@ -17,15 +17,15 @@
   - [`PaymentContainer`](#paymentcontainer)
   - [`ConfirmationContainer`](#confirmationcontainer)
   - [`MyTicketsContainer`](#myticketscontainer)
-  - [Order Details Container](#order-details-container)
+  - [`Order Details Container`](#order-details-container)
 - [Functionalities](#functionalities)
-  - [Login](#login)
-  - [Register](#register)
-  - [Forgot Password](#forgot-password)
-  - [Promo Code](#promo-code)
-  - [Access Code](#access-code)
-  - [Waiting List](#waiting-list)
-  - [Pixel Usage](#pixel-usage)
+  - [`Login`](#login)
+  - [`Register`](#register)
+  - [`Forgot Password`](#forgot-password)
+  - [`Promo Code`](#promo-code)
+  - [`Access Code`](#access-code)
+  - [`Waiting List`](#waiting-list)
+  - [`Pixel Usage`](#pixel-usage)
 
 </details>
 &nbsp;
@@ -223,6 +223,7 @@ Props interface extends [Login Modal Interface](#login), [Register Modal Interfa
 Component includes also phone field, which validation functionality is provided by Twilio and integrated into the component. It provides an additional layer of verification and security during the ticket purchase process.
 
 <details open>
+<summary><b>Billing Info Container Props Interface</b></summary>
 
 | Property                          | Type                                         | Required | Default Value           | Description                                                                                         |
 | --------------------------------- | -------------------------------------------- | -------- | ----------------------- | --------------------------------------------------------------------------------------------------- |
@@ -268,6 +269,7 @@ Component includes also phone field, which validation functionality is provided 
 The component provides a form for users to enter their payment information and checkout. It accepts various props to customize the form and handle the checkout process.  
 
 <details open>
+<summary><b>Payment Container Props Interface</b></summary>
 
 | Property                | Type                            | Required | Default Value        | Description                                                                         |
 | ----------------------- | ------------------------------- | -------- | -------------------- | ----------------------------------------------------------------------------------- |
@@ -300,6 +302,7 @@ The component provides a form for users to enter their payment information and c
 The component is responsible for displaying the confirmation page after a successful payment.  
 
 <details open>
+<summary><b>Confirmation Container Props Interface</b></summary>
 
 | Property                     | Type                | Required | Default Value  | Description                                                                              |
 | ---------------------------- | ------------------- | -------- | -------------- | ---------------------------------------------------------------------------------------- |
@@ -327,6 +330,7 @@ The component is responsible for displaying the confirmation page after a succes
 The component is responsible for rendering a list of orders with details and some customization options.  
 
 <details open>
+<summary><b>My Tickets Container Props Interface</b></summary>
 
 | Property                     | Type                | Required | Default Value  | Description                                                                              |
 | ---------------------------- | ------------------- | -------- | -------------- | ---------------------------------------------------------------------------------------- |
@@ -351,7 +355,7 @@ The component is responsible for rendering a list of orders with details and som
 &nbsp;
 
 
-## Order Details Container
+## `Order Details Container`
 
 Will show the purchased order details. Contains `order PDF download` and `ticket resale` functionalities. Currently both functionalities are enabled by default.
 
@@ -385,7 +389,7 @@ Will show the purchased order details. Contains `order PDF download` and `ticket
 
 # Functionalities
 
-## Login
+## `Login`
 
 The `LoginModal` component is designed to be used inside package to authenticate users.  <br /> To use the `LoginModal`, simply include it in your React component and pass in the required __onLogin__ and __onClose__ callbacks as props.
 
@@ -435,7 +439,7 @@ const MyComponent = () => {
 
 &nbsp;
 
-## Register
+## `Register`
 
 The `RegisterModal` component is designed to be used inside package to allows users to register for an account.  <br />
 
@@ -456,7 +460,7 @@ When the user submits the form, the component calls the register API function to
 
 &nbsp;
 
-## Forgot Password
+## `Forgot Password`
 
 The `ForgotPasswordModal` component is a modal dialog for users to reset their passwords. To use it, simply import the component, manage its open state, and provide callback functions for closing the modal, navigating back to the login page or component, handling successful password reset requests, and handling errors in password reset requests. Optionally, you can also display a "Powered By" image within the modal by setting the __showPoweredByImage__ prop to true.
 
@@ -474,7 +478,7 @@ The `ForgotPasswordModal` component is a modal dialog for users to reset their p
 </details>
 &nbsp;
 
-## Promo Code
+## `Promo Code`
 
 The `PromoCodeSection` is a React component for handling promo code input, validation, and displaying success or error messages. It accepts various props to control its appearance and behavior, such as the promo code value, validation status, input visibility, and callback functions for updating the state which you can see in the below provided table.
 
@@ -507,7 +511,7 @@ In the above example, the `PromoCodeSection` component is imported and used with
 </details>
 &nbsp;
 
-## Access Code
+## `Access Code`
 
 The `AccessCodeSection` is a React component designed for handling access code input and submission. It allows users to enter an access code and triggers an update to the ticket information based on the submitted access code. The component accepts a set of props to manage the access code value and provide callback functions for updating the state which you can see in below table.
 
@@ -528,7 +532,7 @@ To integrate the `AccessCodeSection` component, import it into your JSX and prov
 </details>
 &nbsp;
 
-## Waiting List
+## `Waiting List`
 
 The `WaitingList` component is a React component designed to handle user registration for a waiting list. It displays a form that allows users to input their information, including first name, last name, email, ticket type, and quantity. Upon submission, the component adds the user to the waiting list and displays a success message.
 
@@ -547,7 +551,7 @@ The `WaitingList` component is a React component designed to handle user registr
 
 &nbsp;
 
-## Pixel Usage
+## `Pixel Usage`
 
 The `usePixel` hook is a utility function used to load a pixel script for tracking events on the page. It is commonly used in multiple components throughout the application to track various user actions, such as the completion of a checkout or a purchase. <br />
 
