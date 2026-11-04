@@ -1,564 +1,247 @@
-# tf-checkout-react-sample
+# Ticket Fairy React checkout sample
 
-<details open>
-  <summary><strong>Table of Contents</strong></summary>
+This Gatsby sample is being migrated from the 1.x containers to the published
+shared-core `tf-checkout-react@2.0.0-beta.28`. It demonstrates public browser
+configuration, an operator-confirmed test event, the current `EmbeddedCheckout`
+wiring, and the route changes needed for a 2.x integration.
 
-- [tf-checkout-react-sample](#tf-checkout-react-sample)
-- [Introduction](#introduction)
-- [Prerequisites](#prerequisites)
-- [Installation](#installation)
-  - [Set configuration](#set-configuration)
-    - [Configurations for production](#configurations-for-production)
-    - [Configurations for development](#configurations-for-development)
-- [Components](#components)
-  - [`TicketsContainer`](#ticketscontainer)
-  - [`AddOnsContainer`](#addonscontainer)
-  - [`BillingInfoContainer`](#billinginfocontainer)
-  - [`PaymentContainer`](#paymentcontainer)
-  - [`ConfirmationContainer`](#confirmationcontainer)
-  - [`MyTicketsContainer`](#myticketscontainer)
-  - [`Order Details Container`](#order-details-container)
-- [Functionalities](#functionalities)
-  - [`Login`](#login)
-  - [`Register`](#register)
-  - [`Forgot Password`](#forgot-password)
-  - [`Promo Code`](#promo-code)
-  - [`Access Code`](#access-code)
-  - [`Waiting List`](#waiting-list)
-  - [`Pixel Usage`](#pixel-usage)
+**Real-event payment is deliberately disabled in this draft.** The localhost
+fixture can render a simulated free checkout; it cannot charge or issue real
+tickets. Beta.28 can
+leave a payment button available after an ambiguous result, and recovery across
+a full-page return, reload or navigation has not been established here. The
+sample also lacks durable authoritative order reconciliation. An origin-local
+marker and a test-mode acknowledgement do not make a payment retry safe. Do not
+enable this flow for live or test payments until the SDK, backend and host
+recovery are qualified together.
 
-</details>
-&nbsp;
+The previous account, order and resale containers do not exist as drop-in 2.x
+exports. Those routes stay unavailable while a known ambient-cookie buyer
+isolation limitation is unresolved. See the practical integration guidance in
+[account and resale](docs/account-and-resale.md),
+[checkout layouts](docs/layouts.md) and the
+[original route migration](docs/route-migration.md).
 
-# Introduction
+## Prerequisites
 
-This package includes TicketFairy's checkout functionality, as well as various related functionalities. These functionalities include login/register, order management, resale, referrals, and more.  
+- Node.js 18 or newer and npm.
+- A published, approved test event with a numeric event ID and canonical URL
+  slug. The operator must verify both values and the actual merchant/payment
+  provider's test configuration through an authoritative integration record.
+- A registered **public browser SDK client ID** approved for your environment
+  and host origin. Ask your Ticket Fairy integration contact.
+- The applicable CORS, cookie, payment-provider and browser configuration for
+  the deployment. An approved public client does not itself establish
+  first-party account authority.
 
-This package provides a set of components and functionalities designed to manage various aspects of the TicketFairy event experience. These include:
+The production host may contain a Stripe-test event, but it may also take real
+payments. Likewise, `DEV` or `STAG` alone does not prove that an event's
+merchant is configured for test payments. All `GATSBY_` variables are embedded
+in the browser bundle. Never put a client secret, Basic Authorization value,
+account password or payment-provider secret in the sample, a Gatsby variable
+or Git.
 
-- `AccountSettings`: A component for managing user account settings, such as email address and password.
-- `AddonsContainter`: A component for displaying a list of available add-ons and allowing the user to purchase them.
-- `BillingInfoContainer`: A component for managing billing information, such as addresses and ticket holders.
-- `ConfirmationContainer`: A component for displaying a confirmation page after a purchase is made.
-- `IDVerification`: A component for verifying the identity of the user during the checkout process.
-- `MyTicketsContainer`: A component for displaying a list of purchased orders.
-- `OrderDetailsContainer`: A component for displaying detailed information about a purchase, such as the ticket types, add-ons and pricing.
-- `PaymentContainer`: A component for managing payment processing during the checkout process.
-- `ResetPasswordContainer`: A component for resetting a user's password.
-- `SeatMapContainer`: A component for displaying and selecting seats on a venue map.
-- `TicketResaleContainer`: A component for managing the resale of tickets or add-ons by the user.
-- `TicketsContainer`: A component for displaying a list of available tickets and allowing the user to purchase them.  
+The React SDK bundles the shared checkout core. Do not install the private
+`tf-checkout-shared` workspace package separately.
 
-Together, these components and functionalities provide a comprehensive set of tools to manage the checkout process and related activities for a TicketFairy-powered event.   
-&nbsp;  
-&nbsp;
+## Installation status
 
-# Prerequisites
+The package manifest pins the 2.x SDK. The old 1.x lockfile was removed because
+it cannot represent this dependency change. The published seat-map dependency has a React peer mismatch. In an isolated
+Node 22/npm 10 experiment, a minimal React 18 + beta.28 lock-only resolution
+completed with peer override warnings, `npm ls --package-lock-only` reported
+invalid React/ReactDOM peers, and strict peer resolution failed. That experiment
+was not a Gatsby install or a seat-flow test. Resolve the mismatch upstream or
+select a reviewed compatible dependency combination, then generate and commit
+a genuine `package-lock.json`. Do not hide it with `--legacy-peer-deps`.
 
-- node >= v16.19.0
-- npm >= 8.19.3
+Once the conflict is resolved:
 
-&nbsp;
-
-# Installation
-
-```
-npm i tf-checkout-react
+```sh
+npm install
+cp .env.example .env.development
+# Enter the public settings described below in .env.development.
+npm start
 ```
 
-- [Available Versions List](https://www.npmjs.com/package/tf-checkout-react?activeTab=versions)
+Open `http://localhost:3002/`. Gatsby reads `.env.development` for
+`npm start`; provide corresponding `.env.production` values or build-environment
+variables for `npm run build`. Restart or rebuild after changing variables.
 
-## Set configuration
+Run `npm run test:contracts` for the configuration, guard and fixture-router
+contracts, and `npm run build` after dependency resolution. Seventeen Node contract
+tests passed in an in-memory harness with each source module loaded by a data
+URL; the sample has not been installed, built, or exercised in a browser with
+the packaged SDK. These checks do not establish a working checkout or provider
+integration.
 
-In order to make this package work properly, you need to set some configurations, otherwise the default configurations will be used. Currently only configuration which is needed for production, is `API_BASE`. Other configurations written below are only for development/test environments.
+## Local free-order fixture
 
-Import `setConfigs` function from the package.
+After a clean dependency resolution, start the Gatsby development server and
+the fixture proxy in separate terminals:
 
-```
-import { setConfigs } from 'tf-checkout-react'
-```
-
-Call it in the root and pass neccesary options. Here are available options:
-
-### Configurations for production
-
-- API_BASE - need for making API calls (default: `https://www.ticketfairy.com`)
-
-### Configurations for development
-
-- API_BASE - need for making API calls
-- BRAND_SLUG - slug of the event's parent/owner brand
-- X_SOURCE_ORIGIN - need for local environment. This header will be included in every API request.
-- STRIPE_PUBLISHABLE_KEY - used to authenticate website with Stripe and to communicate securely with Stripe's servers.
-
-Example `.env` file:
-```
-GATSBY_TTF_PUBLIC_API_BASE=https://www.ticketfairy.com
-GATSBY_TTF_BASE_URL=https://www.ticketfairy.com
-GATSBY_TTF_PUBLIC_X_SOURCE_ORIGIN=ticketfairy.com
-GATSBY_TTF_BRAND_SLUG=brand-slug
-GATSBY_TTF_SITE_URL=https://www.ticketfairy.com
+```sh
+npm start
+npm run fixture
 ```
 
-&nbsp;
-# Components
+Open `http://127.0.0.1:4102/fixture/`. The proxy binds only to loopback, sends
+a restrictive content security policy, forwards all non-API/ajax GET and HEAD
+requests to the local Gatsby server and answers a fixed set of mock API routes
+itself. Unknown API and provider routes are rejected. The page configures the real SDK against
+the same fixture origin with in-memory session storage. It presents a fictional
+zero-total event and accepts only **Demo Buyer** and **demo@example.test** for
+the simulated order; do not enter real buyer, address, phone or card data.
 
+The fixture is under development. The mock router's unit contracts passed, but a
+Gatsby build and full browser/SDK journey have not been run, and its wire shapes
+may need correction. Its intended result is a simulated free completion, not a
+real ticket or evidence of payment-provider behavior. The package currently
+contains `EmbeddedCheckout`; the selector detects the planned ready-made
+single-page, progressive and accordion exports and keeps them unavailable until
+a release includes them.
 
-## `TicketsContainer`
+The content security policy restricts subresources, fetch/XHR connections,
+frames and form targets to the fixture origin. It does not reliably prevent
+top-level or popup navigation, or restrict operating-system process egress.
+For a hard egress guarantee run the already-built sample and browser in an
+isolated network namespace with loopback only. Do not use this fixture as a
+proxy to a real Ticket Fairy or payment service.
 
-Tickets component will retrieve and show a list of tickets corresponding to selected event,
-which allows the user to select the desired ticket type and quantity.
+## Public test configuration
 
-The __"Get Tickets"__ button which name is also customizable, allows the user to add the selected tickets to their cart and proceed to the checkout process.<br />
-Other buttons can be displayed to handle various actions, such as viewing the user's orders or logging out.
+| Variable | Value |
+| --- | --- |
+| `GATSBY_TTF_ENV` | `DEV`, `STAG` or `PROD`, matching the approved test event and public client. |
+| `GATSBY_TTF_PUBLIC_CLIENT_ID` | The registered public browser SDK client ID. |
+| `GATSBY_TTF_TEST_EVENT_ID` | The approved test event's numeric ID. |
+| `GATSBY_TTF_TEST_EVENT_SLUG` | Its canonical slug, not a full URL. |
+| `GATSBY_TTF_TEST_PAYMENT_ACKNOWLEDGEMENT` | `I_VERIFIED_TEST_PAYMENTS` only after the operator verifies the event and merchant test configuration. |
 
-Tickets component provides a section for entering an [Access Code](#access-code) or [Promo Code](#promo-code) that applies a discount to the ticket price or hide/unhide some tickets via [Access Code](#access-code).<br />
-It also containes `WaitingLsit` that manages and displays waiting list functionality for the event.<br />
-Props interface partially extends [Promo Code Props Interface](#promo-code), [Access Code Props Interface](#access-code), [Waiting List Props Interface](#waiting-list).
+The acknowledgement is a reminder, not proof of provider configuration.
+Checkout remains disabled even when it is set. Never enter real card data while
+testing.
 
-Tickets component displays a list of the top influencers who have promoted the event.
+The home page shows the configured ID and slug and links to the corresponding
+event route. Those values are initially operator supplied. No SDK request runs
+on that preview. When the operator explicitly starts the test session, the
+sample calls `ttf.events.info(eventId)`. That SDK
+call can create or renew an event-scoped session. It compares the returned slug
+and requires a nonempty name, then displays both for the operator to inspect.
 
-Tickets component is flexible and customizable, allowing for different layouts and behaviors depending on the event's requirements.
+The beta.28 event-info facade does not expose an independently returned ID.
+Even `events.details().id` can be a fallback to the requested ID when the
+server omits one. Matching the slug and inspecting the name helps an operator
+check the configured ID; it is not independent proof of the ID or payment
+configuration. Confirm the mapping in an authoritative source and qualify
+origin access and CORS for your target environment.
 
-___Example of usage___:
-```jsx
+## Checkout and session guard
 
-import { TicketsContainer } from 'tf-checkout-react'
+`src/utils/checkout-runtime.js` imports and configures the SDK in the browser
+after the operator acts. It caches one successful initialization and one React
+Query client; a rejected import/configuration clears the cached promise. The
+checkout uses `cookieAuth: true` and an empty client-secret string with the
+registered public client ID. It does not enable `accountAuth`.
 
-<TicketsContainer
-  theme="light"
-  eventId={event?.id}
-  handleNotInvitedModalClose={() => { }}
-  handleInvalidLinkModalClose={() => { }}
-  onAddToCartSuccess={() => {}}
-  isPromotionsEnabled={event?.is_promotions_enabled}
-  isAccessCodeEnabled={event?.is_access_code}
-  onLogoutSuccess={() => {}}
-  hideSessionButtons={true}
-  enableAddOns={false}
-  showGroupNameBlock={true}
-  tableTicketsHeaderComponent={<div className="tickets-container-header">RESERVE TABLES</div>}
-  onPendingVerification={() => {}}
-/>
-```
-
-<details open>
-  <summary><b>Tickets Container Props Interface</b></summary>
-
-| Property                                 | Type             | Required | Default value  | Description                                                                                    |
-| ---------------------------------------- | ---------------- | -------- | -------------- | ---------------------------------------------------------------------------------------------- |
-| eventId                                  | string / number  | yes      | N/A            | The unique identifier for the event that the tickets belong to.                                |
-| getTicketsLabel                          | string           | no       | “Get Tickets"  | The label for the "Get Tickets" button.                                                        |
-| contentStyle                             | CSSProperties    | no       | {}             | An object containing styles to apply to the tickets list container.                            |
-| theme                                    | ‘light’, ‘dark'  | no       | ‘light'        | The theme to use for the tickets list container. Sets as `className`.                          |
-| themeOptions                             | MUI ThemeOptions | no       | N/A            | MUI Theme Provider’s theme options.                                                            |
-| queryPromoCode (deprecated)              | -                | -        | -              | -                                                                                              |
-| isButtonScrollable (deprecated)          | -                | -        | -              | -                                                                                              |
-| disableCountdownLeadingZero (deprecated) | -                | -        | -              | -                                                                                              |
-| isLoggedIn (deprecated)                  | -                | -        | -              | -                                                                                              |
-| isPromotionsEnabled                      | boolean          | no       | false          | Whether or not promotions are enabled for the tickets list.                                    |
-| isAccessCodeEnabled                      | boolean          | no       | false          | Whether or not access codes are enabled for the tickets list.                                  |
-| hideTicketsHeader                        | boolean          | no       | false          | Whether to hide the tickets header.                                                            |
-| hideSessionButtons                       | boolean          | no       | false          | Whether to hide “My Tickets” and “Log Out” buttons.                                            |
-| hideWaitingList                          | boolean          | no       | false          | Whether to hide the waiting list.                                                              |
-| enableBillingInfoAutoCreate              | boolean          | no       | true           | Whether to enable auto-creation of billing information, instead of manually creation by user.  |
-| enableInfluencersSection                 | boolean          | no       | true           | Whether to display the influencers section.                                                    |
-| enableAddOns                             | boolean          | no       | true           | Whether to enable add-ons.                                                                     |
-| sortBySoldOut                            | boolean          | no       | false          | Whether to sort tickets by sold-out status. By default tickets will be sorted by sort order.   |
-| hideTableTicketsHeader                   | boolean          | no       | false          | Whether to hide table type tickets section header.                                             |
-| showPoweredByImage                       | boolean          | no       | false          | Whether to show the "Powered by TheTicketFairy" image.                                         |
-| showGroupNameBlock                       | boolean          | no       | false          | Whether to show the ticket group name block.                                                   |
-| actionsSectionComponent                  | ReactNode        | no       | N/A            | Custom component instead of “Get Tickets” button.                                              |
-| ticketsHeaderComponent                   | ReactNode        | no       | N/A            | A React component to render the tickets section header.                                        |
-| tableTicketsHeaderComponent              | ReactNode        | no       | N/A            | A React component to render the table type tickets section header.                             |
-| ordersPath                               | string           | no       | '/orders'      | The URL path to the orders page.                                                               |
-| currencySybmol                           | string           | no       | ' '            | The currency symbol to use.                                                                    |
-| -                                        | -                | -        | -              | -                                                                                              |
-| onAddToCartSuccess                       | (data) => void   | no       | value => value | A callback function to be called when a ticket is successfully added to the cart.              |
-| onAddToCartError                         | (error) => void  | no       | value => value | A callback function to be called when there is an error adding a ticket to the cart.           |
-| onGetTicketsSuccess                      | (data) => void   | no       | value => value | A callback function to be called when the tickets are successfully retrieved.                  |
-| onGetTicketsError                        | (error) => void  | no       | value => value | A callback function to be called when there is an error retrieving the tickets.                |
-| onLogoutSuccess                          | () => void       | no       | value => value | A callback function to be called when the user successfully logs out.                          |
-| onLogoutError                            | (error) => void  | no       | value => value | A callback function to be called when there is an error logging out.                           |
-| onLoginSuccess                           | () => void       | no       | value => value | A callback function to be called when the user successfully logs in.                           |
-| handleNotInvitedModalClose               | () => void       | no       | value => value | A callback function to be called when the "Not Invited" modal is closed.                       |
-| handleInvalidLinkModalClose              | () => void       | no       | value => value | A callback function to be called when the "Invalid Link" modal is closed.                      |
-| onReserveButtonClick                     | () => void       | no       | value => value | A callback function to be called when the 'Select on map' button is clicked.                   |
-| onPendingVerification                    | () => void       | no       | value => value | A callback function to be called when the verification process is passed and pending response. |
-
-</details>
-
-&nbsp;
-
-## `AddOnsContainer`
-
-Add-Ons component will retrieve and show a list of add-ons corresponding to selected event.
-
-<details open>
-  <summary><b>Add-Ons Container Props Interface</b></summary>
-
-| Property                    | Type            | Required | Default value  | Description                                                                                          |
-| --------------------------- | --------------- | -------- | -------------- | ---------------------------------------------------------------------------------------------------- |
-| classNamePrefix             | string          | no       | 'add_on'       | Prefix to use for the CSS class names of the component.                                              |
-| enableBillingInfoAutoCreate | boolean         | no       | true           | Whether to enable auto-creation of billing information, instead of manually creation by user.        |
-| enableTimer                 | boolean         | no       | true           | Whether to show a timer for the user.                                                                |
-| -                           | -               | -        | -              | -                                                                                                    |
-| onGetAddonsPageInfoSuccess  | (data) => void  | no       | value => value | A callback function to be called when the add-ons page information is successfully fetched.          |
-| onGetAddonsPageInfoError    | (error) => void | no       | value => value | A callback function to be called when there is an error while fetching the add-ons page information. |
-| onPostCheckoutSuccess       | (data) => void  | no       | value => value | A callback function to be called when the add-ons are successfully added to the cart.                |
-| onPostCheckoutError         | (error) => void | no       | value => value | A callback function to be called when there is an error while adding add-ons to the cart.            |
-| onConfirmSelectionSuccess   | (data) => void  | no       | value => value | A callback function to be called when the add-ons selection is successfully confirmed.               |
-| onConfirmSelectionError     | (error) => void | no       | value => value | A callback function to be called when there is an error while confirming the add-ons selection.      |
-| onCountdownFinish           | () => void      | no       | value => value | A callback function that is called when the countdown timer finishes.                                |
-| onPendingVerification       | () => void      | no       | value => value | A callback function to be called when the verification process is passed and pending response.       |
-
-</details>
-
-&nbsp;
-
-## `BillingInfoContainer`
-The component is responsible for managing the billing information during the checkout process. It provides a form that allows users to enter their billing information, including addresses and ticket holders' information.  
-Props interface extends [Login Modal Interface](#login), [Register Modal Interface](#register), [Forgot Password Modal Interface](#forgot-password).
-
-Component includes also phone field, which validation functionality is provided by Twilio and integrated into the component. It provides an additional layer of verification and security during the ticket purchase process.
-
-<details open>
-<summary><b>Billing Info Container Props Interface</b></summary>
-
-| Property                          | Type                                         | Required | Default Value           | Description                                                                                         |
-| --------------------------------- | -------------------------------------------- | -------- | ----------------------- | --------------------------------------------------------------------------------------------------- |
-| data                              | IBillingInfoData[]                           | no       | []                      | Form fields list to be rendered to collect billing info data.                                       |
-| ticketHoldersFields               | IBillingInfoData[]                           | no       | [{ id: 1, fields: [] }] | Form fields list to be rendered to collect ticket holders data.                                     |
-| initialValues (deprecated)        | { [key: string]: any }                       | no       | {}                      | Form’s initial values.                                                                              |
-| theme                             | 'light' / 'dark'                             | no       | 'light'                 | MUI Theme Provider’s theme.                                                                         |
-| isLoggedIn (deprecated)           | -                                            | -        | -                       | -                                                                                                   |
-| onLogin (deprecated)              | -                                            | -        | -                       | -                                                                                                   |
-| brandOptIn (deprecated)           | -                                            | -        | -                       | -                                                                                                   |
-| shouldFetchCountries (deprecated) | -                                            | -        | -                       | -                                                                                                   |
-| accountInfoTitle                  | string / JSX.Element                         | no       | “”                      | Render some text or JSX component above Login section. Do not available if there is logged in user. |
-| hideLogo                          | boolean                                      | no       | false                   | Hide TicketFairy logo under “Login” button.                                                         |
-| themeOptions                      | MUI ThemeOptions                             | no       | N/A                     | MUI Theme Provider’s theme.                                                                         |
-| hideErrorsAlertSection            | boolean                                      | no       | false                   | Hide form submit errors rendered by package.                                                        |
-| skipPage                          | boolean                                      | no       | false                   | Enable skipping Billing Info page.                                                                  |
-| canSkipHolderNames                | boolean                                      | no       | false                   | Allows the user to skip entering ticket holders' names.                                             |
-| enableTimer                       | boolean                                      | no       | false                   | Enables the countdown timer.                                                                        |
-| buttonName                        | string                                       | no       | false                   | The text to display on the submit button.                                                           |
-| showPoweredByImage                | boolean                                      | no       | false                   | Displays the "Powered by TheTicketFairy" image.                                                     |
-| isCountryCodeEditable             | boolean                                      | no       | true                    | Allows the user to edit the country code.                                                           |
-| -                                 | -                                            | -        | -                       | -                                                                                                   |
-| handleSubmit                      | (values, helpers, eventId, response) => void | no       | value => value          | A callback function that is called when the form is submitted.                                      |
-| onSubmitError                     | (error) => void                              | no       | value => value          | A callback function that is called when form submission fails.                                      |
-| onGetCartSuccess                  | (data) => void                               | no       | value => value          | A callback function that is called when the cart data is successfully retrieved.                    |
-| onGetCartError                    | (error) => void                              | no       | value => value          | A callback function that is called when retrieving the cart data fails.                             |
-| onErrorClose                      | () => void                                   | no       | value => value          | A callback function that is called when the error message is closed.                                |
-| onSkipBillingPage                 | (data) => void                               | no       | value => value          | A callback function that is called when the billing page skips.                                     |
-| onGetCountriesSuccess             | (data) => void                               | no       | value => value          | A callback function that is called when the list of countries is successfully retrieved.            |
-| onGetCountriesError               | (error) => void                              | no       | value => value          | A callback function that is called when retrieving the list of countries fails.                     |
-| onGetStatesSuccess                | (data) => void                               | no       | value => value          | A callback function that is called when the list of states is successfully retrieved.               |
-| onGetCountriesError               | (error) => void                              | no       | value => value          | A callback function that is called when retrieving the list of states fails.                        |
-| onAuthorizeSuccess                | (data) => void                               | no       | value => value          | A callback function that is called when authorization is successful.                                |
-| onAuthorizeError                  | (error) => void                              | no       | value => value          | A callback function that is called when authorization fails.                                        |
-| onCountdownFinish                 | () => void                                   | no       | value => value          | A callback function that is called when the countdown timer finishes.                               |
-| onPendingVerification             | () => void                                   | no       | value => value          | A callback function that is called when the verification process is passed and pending response.    |
-
-</details>
-
-&nbsp;
-
-## `PaymentContainer`
-The component provides a form for users to enter their payment information and checkout. It accepts various props to customize the form and handle the checkout process.  
-
-<details open>
-<summary><b>Payment Container Props Interface</b></summary>
-
-| Property                | Type                            | Required | Default Value        | Description                                                                         |
-| ----------------------- | ------------------------------- | -------- | -------------------- | ----------------------------------------------------------------------------------- |
-| paymentFields           | IPaymentField[]                 | yes      | []                   | An array of payment fields to render in the form.                                   |
-| checkoutData            | { hash: string, total: number } | yes      | N/A                  | An object containing checkout data, such as the order total and hash.               |
-| formTitle               | string                          | no       | 'Get Your Tickets'   | Text to display above the payment form.                                             |
-| errorText               | string                          | no       | ''                   | Text to display if there is an error during the payment process.                    |
-| paymentButtonText       | string                          | no       | 'Pay'                | Text to display on the payment button.                                              |
-| paymentInfoLabel        | string                          | no       | 'Order Confirmation' | Text to display above the payment information section.                              |
-| orderInfoLabel          | string                          | no       | 'Order Review'       | Text to display above the order information section.                                |
-| stripeCardOptions       | StripeCardNumberElementOptions  | no       | {}                   | Options for the Stripe card input element.                                          |
-| elementsOptions         | StripeElementsOptions           | no       | {}                   | Options for the Stripe Elements instance.                                           |
-| themeOptions            | ThemeOptions                    | no       | {}                   | An object containing theme options for the payment form.                            |
-| enableTimer             | boolean                         | no       | false                | Whether to show a timer for the user.                                               |
-| disableZipSection       | boolean                         | no       | false                | Whether to show the zip code input field.                                           |
-| enablePaymentPlan       | boolean                         | no       | true                 | Whether to enable payment plans.                                                    |
-| -                       | -                               | -        | -                    | -                                                                                   |
-| handlePayment           | (data) => void                  | yes      | value => value       | A callback function to handle the payment process.                                  |
-| onPaymentError          | (error) => void                 | no       | value => value       | A callback function that is called when the payment process fails.                  |
-| onErrorClose            | () => void                      | no       | value => value       | A callback function that is called when the error message is closed.                |
-| onGetPaymentDataSuccess | (data) => void                  | no       | value => value       | A callback function that is called when the payment data is successfully retrieved. |
-| onGetPaymentDataError   | (error) => void                 | no       | value => value       | A callback function that is called when retrieving the payment data fails.          |
-| onCountdownFinish       | () => void                      | no       | value => value       | A callback function that is called when the countdown timer finishes.               |
-
-</details>
-
-&nbsp;
-
-## `ConfirmationContainer`
-The component is responsible for displaying the confirmation page after a successful payment.  
-
-<details open>
-<summary><b>Confirmation Container Props Interface</b></summary>
-
-| Property                     | Type                | Required | Default Value  | Description                                                                              |
-| ---------------------------- | ------------------- | -------- | -------------- | ---------------------------------------------------------------------------------------- |
-| isReferralEnabled            | boolean             | yes      | false          | Whether referral functionality is enabled.                                               |
-| showDefaultShareButtons      | boolean             | yes      | false          | Whether to display default share buttons.                                                |
-| shareButtons                 | IShareButton[]      | yes      | []             | Array of objects representing the share buttons.                                         |
-| messengerAppId               | string              | yes      | N/A            | Messenger App ID for Facebook share button.                                              |
-| orderHash                    | string              | no       | N/A            | Hash value of the order.                                                                 |
-| clientLabel                  | string              | no       | 'Ticket Fairy' | Client's name.                                                                           |
-| confirmationLabels           | IConfirmationLabels | no       | {}             | Object containing labels for the confirmation page.                                      |
-| hasCopyIcon                  | boolean             | no       | true           | Whether to display a copy icon beside the referral link.                                 |
-| showReferralsInfoText        | boolean             | no       | false          | Whether to display referral information text.                                            |
-| showCopyInfoModal            | boolean             | no       | false          | Whether to display a copy info modal after the link is copied.                           |
-| showPricingNoteSection       | boolean             | no       | false          | Whether to display the pricing note section.                                             |
-| -                            | -                   | -        | -              | -                                                                                        |
-| onGetConfirmationDataSuccess | (data) => void      | yes      | value => value | A callback function that is called when the confirmation data is successfully retrieved. |
-| onGetConfirmationDataError   | (error) => void     | yes      | value => value | A callback function that is called when retrieving the confirmation data fails.          |
-| onLinkCopied                 | () => void          | no       | value => value | A callback function that is called when the referral link is copied.                     |
-
-</details>
-
-&nbsp;
-
-## `MyTicketsContainer`
-The component is responsible for rendering a list of orders with details and some customization options.  
-
-<details open>
-<summary><b>My Tickets Container Props Interface</b></summary>
-
-| Property                     | Type                | Required | Default Value  | Description                                                                              |
-| ---------------------------- | ------------------- | -------- | -------------- | ---------------------------------------------------------------------------------------- |
-| isReferralEnabled            | boolean             | yes      | false          | Whether referral functionality is enabled.                                               |
-| showDefaultShareButtons      | boolean             | yes      | false          | Whether to display default share buttons.                                                |
-| shareButtons                 | IShareButton[]      | yes      | []             | Array of objects representing the share buttons.                                         |
-| messengerAppId               | string              | yes      | N/A            | Messenger App ID for Facebook share button.                                              |
-| orderHash                    | string              | no       | N/A            | Hash value of the order.                                                                 |
-| clientLabel                  | string              | no       | 'Ticket Fairy' | Client's name.                                                                           |
-| confirmationLabels           | IConfirmationLabels | no       | {}             | Object containing labels for the confirmation page.                                      |
-| hasCopyIcon                  | boolean             | no       | true           | Whether to display a copy icon beside the referral link.                                 |
-| showReferralsInfoText        | boolean             | no       | false          | Whether to display referral information text.                                            |
-| showCopyInfoModal            | boolean             | no       | false          | Whether to display a copy info modal after the link is copied.                           |
-| showPricingNoteSection       | boolean             | no       | false          | Whether to display the pricing note section.                                             |
-| -                            | -                   | -        | -              | -                                                                                        |
-| onGetConfirmationDataSuccess | (data) => void      | yes      | value => value | A callback function that is called when the confirmation data is successfully retrieved. |
-| onGetConfirmationDataError   | (error) => void     | yes      | value => value | A callback function that is called when retrieving the confirmation data fails.          |
-| onLinkCopied                 | () => void          | no       | value => value | A callback function that is called when the referral link is copied.                     |
-
-</details>
-
-&nbsp;
-
-
-## `Order Details Container`
-
-Will show the purchased order details. Contains `order PDF download` and `ticket resale` functionalities. Currently both functionalities are enabled by default.
-
-<details open>
-  <summary><b>Order Container Props Interface:</b></summary>
-
-| Property                  | Type                      | Required | Default Value              | Description                                                                              |
-| ------------------------- | ------------------------- | -------- | -------------------------- | ---------------------------------------------------------------------------------------- |
-| columns                   | [ { label: string } ]     | yes      | []                         | Order details table’s columns’ labels.                                                   |
-| ticketsTableColumns       | ITicketsTableColumns[]    | no       | defaultTicketsTableColumns | Order’s tickets table’s columns.                                                         |
-| displayColumnNameInRow    | boolean                   | no       | false                      | Display column’s names in row, instead of table header.                                  |
-| canSellTicket             | boolean                   | no       | true                       | A boolean value indicating whether the user can sell tickets.                            |
-| ordersPath                | string                    | no       | '/orders'                  | A string representing the URL of the `MyTicketrsContainer` page.                         |
-| orderId                   | string or number          | no       |                            | A string or number representing the ID of the order to be displayed.                     |
-| referralTitle             | string                    | no       | ""                         | A string representing the title of the referral section.                                 |
-| itemsTitle                | string                    | no       | ""                         | A string representing the title of the items section.                                    |
-| ticketsTitle              | string                    | no       | "Your Tickets"             | A string representing the title of the tickets table section.                            |
-| personalLinkIcon          | string                    | no       | “”                         | Custom icon to display near personal share link.                                         |
-| onGetOrdersSuccess        | Function: (data) => void  | no       | value => value             | Called after fetching order data request’s success.                                      |
-| onGetOrdersError          | Function: (error) => void | no       | value => value             | Called after fetching order data request’s failure.                                      |
-| onResaleTicketSuccess     | Function: (data) => void  | no       | value => value             | Called after resale ticket request’s success.                                            |
-| onResaleTicketError       | Function: (error) => void | no       | value => value             | Called after resale ticket request’s failure.                                            |
-| onRemoveFromResaleSuccess | Function: (data) => void  | no       | value => value             | Called after remove from resale ticket request’s success.                                |
-| onRemoveFromResaleError   | Function: (error) => void | no       | value => value             | Called after remove from resale ticket request’s failure.                                |
-| onReturnButtonClick       | Function: () => void      | no       | N/A                        | Called on “Return” button click. If not passed, button click will redirect to ‘/orders’. |
-
-</details>
-
-&nbsp;
-
-
-# Functionalities
-
-## `Login`
-
-The `LoginModal` component is designed to be used inside package to authenticate users.  <br /> To use the `LoginModal`, simply include it in your React component and pass in the required __onLogin__ and __onClose__ callbacks as props.
-
-You can authenticate users from the Billing page too, here you can either provide __onLogin__ callback as a prop to the [`BillingInfoContainer`](#billinginfocontainer) component so that you can open your custom component for authentication or you can ommit it and the package inside provided `LoginModal` component will be called and opened.
-
-Package can detect whether a user is logged in or not by checking for the presence of the __X-TF-ECOMMERCE__ cookie, which is automatically set by the system when the user successfully logs in. If the __X-TF-ECOMMERCE__ cookie is present, the package assumes that the user is logged in and displays the appropriate content.
-
-The `LoginModal` component also is used in [`MyTicketsContainer`](#myticketscontainer) and  [`TicketsContainer`](#ticketscontainer).
-
-To detect whether a user is logged in or not, you can use the __useCookieListener__ hook provided by the package.
-Here's an example of how to use the __useCookieListener__ hook to automatically detect whether the user is logged in:
+The intended wiring, currently disabled in the event page, is:
 
 ```jsx
-import { useEffect, useRef, useState } from 'react'
-import { useCookieListener } from 'tf-checkout-react'
-
-const MyComponent = () => {
-  const [isLogged, setIsLogged] = useState(false)
-
-  // Listen for changes to the __X-TF-ECOMMERCE__ cookie
-  useCookieListener("X_TF_ECOMMERCE", value => setIsLogged(Boolean(value)))
-
-  // ... rest of component logic
-}
+<QueryClientProvider client={queryClient}>
+  <EmbeddedCheckout
+    eventId={eventId}
+    confirmationMode="redirect"
+    onComplete={(result) => handoffToVerifiedOrderStatus(result)}
+  />
+</QueryClientProvider>
 ```
 
-<details open>
-<summary><b>Login Modal Props Interface:</b></summary>
+`EmbeddedCheckout` owns its `CheckoutProvider`. Do not wrap it in another.
+The SDK entry imports CSS and assets; a deployed Gatsby build must process
+those imports. Static hosts also need the appropriate client-side route
+fallback for `/events/*`.
 
-| Property                 | Type                | Required | Default Value                   | Description                                                                                                                 |
-| ------------------------ | ------------------- | -------- | ------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| onLogin                  | () => void          | yes      | N/A                             | Called after the user successfully authorizes.                                                                              |
-| onClose                  | () => void          | yes      | N/A                             | Called on modal close.                                                                                                      |
-| onGetProfileDataSuccess  | (data) => void      | no       | value => value                  | A callback function that is called when the profile data is successfully retrieved.                                         |
-| onGetProfileDataError    | (error) => void     | no       | value => value                  | A callback function that is called when retrieving the profile data fails.                                                  |
-| onForgotPassword         | () => void          | no       | value => value                  | Called on “Forgot Password” button click.                                                                                   |
-| onSignup                 | () => void          | no       | value => value                  | Called on “Sign Up” button click.                                                                                           |
-| modalClassname           | string              | no       | " "                             | Login modal main container class.                                                                                           |
-| logo                     | string / URL / path | no       | TheTicketFairy black logo (URL) | Login modal top section’s logo.                                                                                             |
-| showForgotPasswordButton | boolean             | no       | false                           | Display “Forgot Password” button.                                                                                           |
-| showSignUpButton         | boolean             | no       | false                           | Display “Sign Up” button.                                                                                                   |
-| showPoweredByImage       | boolean             | no       | false                           | Whether or not to show the <a href="https://cdn-checkout.s3.us-east-2.amazonaws.com/IconTicketFairy.svg">Powered image</a>. |
-| alreadyHasUser           | boolean             | no       | false                           | Whether or not to show the "email is already attached to an account" message block.                                         |
-| userExpired              | boolean             | no       | false                           | Whether or not to show the "session expired" message block.                                                                 |
+The future payment path is wired to claim an origin-local marker with no order
+hash or personal data before it can mount checkout. The disabled preview does
+not write that marker. If a marker already exists, is unknown, or browser
+storage fails, the route blocks another session. The marker survives a normal
+same-origin reload and navigation, but it is **not** an atomic cross-tab lock,
+a cross-device recovery mechanism, a server-side idempotency key or proof of
+settlement. Clearing browser data or using another origin/device bypasses it,
+and it cannot control retry actions inside the stock SDK UI.
 
-</details>
+There is no automatic marker reset. After independently establishing that the
+test session has no unresolved payment or order, a developer may remove
+`tf-sample-checkout-unresolved-v1` from this origin's browser local storage.
+Removing it does not reconcile an order; never clear it merely because a
+request timed out or a page closed.
 
-&nbsp;
+## Payment and return handling
 
-## `Register`
+`onComplete` returns a `PlaceOrderResult` that can contain `orderHash`,
+`pending`, `needIdVerification` and `pendingVoucherUrl`. A callback, a missing
+`pending` flag, a redirect or a closed popup does not prove settlement or
+ticket issuance. Never invite a new payment solely because an outcome is
+uncertain.
 
-The `RegisterModal` component is designed to be used inside package to allows users to register for an account.  <br />
+A production host must securely hand the order reference to its backend and
+reconcile the authoritative Ticket Fairy order with provider status. It must
+preserve unresolved state across refreshes, navigation, other tabs and devices;
+handle idempotency and interrupted attempts; complete identity verification;
+and securely deliver any pending voucher after validating its provider URL.
+Do not log order hashes, voucher links, session tokens or buyer/payment data.
 
-When the user submits the form, the component calls the register API function to create the user's account. If account creation is successful, the component then retrieves the user's profile data. The __onGetProfileDataSuccess__ and __onGetProfileDataError__ callbacks are then called depending on whether the profile data retrieval succeeds or fails. If profile data retrieval succeeds, the component maps the profile data to a format used by the application and saves the resulting data to the browser's localStorage. Finally, the __onClose__ callback is called to close the modal.
+Beta.28's Stripe Payment Element can return to the current page with
+`payment_return=true` after a full-page navigation. That reload discards this
+sample's in-memory result; the sample does not reconcile the return flag.
+Popup payment rails can return to Ticket Fairy's origin, which a third-party
+host cannot inspect with same-origin polling; the expected cross-origin message
+and recovery have not been qualified here. Do not claim those rails work based
+on this sample. The beta guards some same-store retries, but its payment button
+may still be offered after an ambiguous result. Resolve the message, action
+and reload recovery with authoritative status before allowing payment.
 
-<details open>
-<summary><b>Register Modal Props Interface:</b></summary>
+## Routes and developer examples
 
-| Property                | Type            | Required | Default Value  | Description                                                                                                                 |
-| ----------------------- | --------------- | -------- | -------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| onRegister (deprecated) | () => void      | no       | N/A            | -                                                                                                                           |
-| onClose                 | () => void      | yes      | N/A            | Called on modal close, after register request's success.                                                                    |
-| onGetProfileDataSuccess | (data) => void  | no       | value => value | A callback function that is called when the profile data is successfully retrieved.                                         |
-| onGetProfileDataError   | (error) => void | no       | value => value | A callback function that is called when retrieving the profile data fails.                                                  |
-| showPoweredByImage      | boolean         | no       | false          | Whether or not to show the <a href="https://cdn-checkout.s3.us-east-2.amazonaws.com/IconTicketFairy.svg">Powered image</a>. |
+| Route or source | Current behavior |
+| --- | --- |
+| `/` and `src/pages/index.js` | Opens the explicitly configured event, as the original sample did. |
+| `/fixture/` | Local-only simulated free checkout; SDK/browser acceptance remains outstanding. |
+| `/events/[slug]/?eventId=...` | Requires the configured ID and slug, then operator consent before SDK session creation. Payment remains disabled. |
+| `/billing/billing-info` and `/billing/checkout` | Explain that billing and payment moved into the embedded flow; 1.x carts cannot be resumed here. |
+| `/billing/checkout-complete` | A neutral notice; it cannot establish the state of a legacy order. |
+| `/orders` and `/order` | Unavailable until full-account authorization and buyer isolation are enforced. |
+| `/buy/resold/ticket` | Unavailable until the buyer-side resale acceptance and same-session cart creation are established. |
+| `src/utils/sample-config.mjs` | Validates public demo settings and the configured route. |
+| `src/utils/checkout-guard.mjs` | Advisory local unresolved-session marker, not a security or payment boundary. |
+| `src/utils/checkout-runtime.js` | Browser-only SDK setup and React Query client. |
+| `docs/layouts.md` | Ready-made checkout layouts and their SDK dependencies. |
+| `docs/route-migration.md` | Original routed checkout progression and SDK compatibility work. |
+| `docs/account-and-resale.md` | Current orders, tickets, sender resale and buyer resale contracts and their prerequisites. |
 
-</details>
+`TicketsContainer`, `BillingInfoContainer`, `PaymentContainer`,
+`ConfirmationContainer`, `MyTicketsContainer`, `OrderDetailsContainer`,
+`TicketResaleContainer`, `LoginModal` and `ForgotPasswordModal` are not
+drop-in 2.x exports. Use `EmbeddedCheckout` for the stock event flow; the
+other ready-made variants are pending the SDK update. Do not reconstruct 1.x
+carts from browser local storage. `ResumedCheckout` requires an existing cart
+in the same session.
 
-&nbsp;
+See the exact published
+[beta.28 React SDK documentation](https://www.npmjs.com/package/tf-checkout-react/v/2.0.0-beta.28),
+including its ready-made components and composed layout recipes.
 
-## `Forgot Password`
+## Work remaining before release
 
-The `ForgotPasswordModal` component is a modal dialog for users to reset their passwords. To use it, simply import the component, manage its open state, and provide callback functions for closing the modal, navigating back to the login page or component, handling successful password reset requests, and handling errors in password reset requests. Optionally, you can also display a "Powered By" image within the modal by setting the __showPoweredByImage__ prop to true.
-
-<details open>
-<summary><b>Forgot Password Modal Props Interface:</b></summary>
-
-| Property                | Type            | Required | Default Value  | Description                                                                                                                 |
-| ----------------------- | --------------- | -------- | -------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| onLogin                 | () => void      | yes      | N/A            | Called on "Back to Log In" button click.                                                                                    |
-| onClose                 | () => void      | yes      | N/A            | Called on modal close, after register request's success.                                                                    |
-| onForgotPasswordSuccess | (data) => void  | no       | value => value | A callback function that is called when the user successfully resets their password.                                        |
-| onForgotPasswordError   | (error) => void | no       | value => value | A callback function that is called when there is an error resetting the password.                                           |
-| showPoweredByImage      | boolean         | no       | false          | Whether or not to show the <a href="https://cdn-checkout.s3.us-east-2.amazonaws.com/IconTicketFairy.svg">Powered image</a>. |
-
-</details>
-&nbsp;
-
-## `Promo Code`
-
-The `PromoCodeSection` is a React component for handling promo code input, validation, and displaying success or error messages. It accepts various props to control its appearance and behavior, such as the promo code value, validation status, input visibility, and callback functions for updating the state which you can see in the below provided table.
-
-To use this component, simply import it and include it in your JSX with the required props, managing the component's state and callback functions in the parent component as needed.
-
-***Note that package automatically calls component in [`TicketsContainer`](#ticketscontainer)***.
-
-
-<details open>
-<summary><b>Promo Code Props Interface:</b></summary>
-
-| Property          | Type                                   | Required | Default Value | Description                                                           |
-| ----------------- | -------------------------------------- | -------- | ------------- | --------------------------------------------------------------------- |
-| code              | string                                 | yes      | ' '           | The promo code.                                                       |
-| codeIsApplied     | boolean                                | yes      | false         | Whether or not the promo code is currently applied.                   |
-| showPromoInput    | boolean                                | yes      | false         | Whether or not to show the promo code input field.                    |
-| codeIsInvalid     | boolean                                | yes      | false         | Whether or not the promo code is invalid.                             |
-| showAlertIcons    | boolean                                | no       | false         | Whether or not to show the alert icons.                               |
-| promoText         | string                                 | no       | false         | Button label, which click displays promo code input.                  |
-| -                 | -                                      | -        | -             | -                                                                     |
-| setCode           | (value: string) => void                | yes      | -             | A function to set the promo code.                                     |
-| setCodeIsApplied  | (value: boolean) => void               | yes      | -             | A function to set whether or not the promo code is currently applied. |
-| setCodeIsInvalid  | (value: boolean) => void               | yes      | -             | A function to set whether or not the promo code is invalid.           |
-| setShowPromoInput | (value: boolean) => void               | yes      | -             | A function to set whether or not to show the promo code input field.  |
-| updateTickets     | (value: boolean, type: string) => void | yes      | -             | A function to update the tickets based on the promo code.             |
-
-</details>
-&nbsp;
-
-## `Access Code`
-
-The `AccessCodeSection` is a React component designed for handling access code input and submission. It allows users to enter an access code and triggers an update to the ticket information based on the submitted access code. The component accepts a set of props to manage the access code value and provide callback functions for updating the state which you can see in below table.
-
-To integrate the `AccessCodeSection` component, import it into your JSX and provide the required props, such as the access code value, and callback functions for updating the state. Make sure to manage the component's state and callback functions within the parent component as needed. <br /> 
-
-***Note that package automatically calls component in [`TicketsContainer`](#ticketscontainer)***.
-
-<details open>
-<summary><b>Access Code Props Interface:</b></summary>
-
-| Property      | Type                     | Required | Default Value | Description                                                |
-| ------------- | ------------------------ | -------- | ------------- | ---------------------------------------------------------- |
-| code          | string                   | yes      | ' '           | The access code.                                           |
-| -             | -                        | -        | -             | -                                                          |
-| setCode       | (value: string) => void  | yes      | -             | A function to set the access code.                         |
-| updateTickets | (value: boolean) => void | yes      | -             | A function to update the tickets based on the access code. |
-
-</details>
-&nbsp;
-
-## `Waiting List`
-
-The `WaitingList` component is a React component designed to handle user registration for a waiting list. It displays a form that allows users to input their information, including first name, last name, email, ticket type, and quantity. Upon submission, the component adds the user to the waiting list and displays a success message.
-
-***Note that package automatically calls component in [`TicketsContainer`](#ticketscontainer)***.
-
-<details open>
-<summary><b>Waiting List Props Interface:</b></summary>
-
-| Property           | Type            | Required | Default Value | Description                                                   |
-| ------------------ | --------------- | -------- | ------------- | ------------------------------------------------------------- |
-| tickets            | Object          | yes      | ' '           | The list of tickets to be displayed.                          |
-| eventId            | string / number | yes      | N/A           | The ID of the event for which the tickets are displayed.      |
-| defaultMaxQuantity | number          | yes      | 10            | The default maximum quantity of tickets that can be selected. |
-
-</details>
-
-&nbsp;
-
-## `Pixel Usage`
-
-The `usePixel` hook is a utility function used to load a pixel script for tracking events on the page. It is commonly used in multiple components throughout the application to track various user actions, such as the completion of a checkout or a purchase. <br />
-
-The purpose of the `usePixel` hook is to enable event tracking and analytics for various user actions within the application.
-
-Here is the list of pages where the `usePixel` function is automatically used:
-
-- Billing Info Container
-- Confirmation Container
-- Payment Container
-- Tickets Container
-
-&nbsp;
+- Resolve the seat-map peer conflict, generate a genuine lockfile, then install
+  and build without peer-dependency bypasses.
+- Run the contract tests and qualify Gatsby routing, CSS and assets in a
+  deployed browser environment.
+- Confirm the approved event, ID/slug mapping, origin access and the actual
+  test merchant configuration.
+- Fix and qualify ambiguous-payment handling, return/popup flows, durable
+  reconciliation, idempotency, vouchers, identity verification and recovery.
+- Resolve the SDK/backend ambient-cookie buyer isolation issue; implement and
+  test an approved full-account journey before enabling order or resale views.
+- Establish the buyer-side resale invitation, acceptance and same-session
+  cart contract. Test owner changes, authorization, CSRF and uncertain writes.

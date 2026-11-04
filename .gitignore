@@ -103,3 +103,7 @@ public
 .tern-port
 
 .DS_Store
+
+# Keep real environment files private; document only empty public values.
+.env
+!.env.example
