@@ -1,28 +1,31 @@
 {
   "name": "tf-checkout-react-sample-app",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
-  "description": "tf-checkout-react-sample-app",
-  "keywords": [
-    "gatsby"
-  ],
+  "description": "A Gatsby integration example for the Ticket Fairy React checkout SDK",
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
-    "develop": "gatsby develop -p 3002",
-    "start": "gatsby develop -p 3002",
+    "develop": "gatsby develop -H 127.0.0.1 -p 3002",
+    "start": "gatsby develop -H 127.0.0.1 -p 3002",
     "build": "gatsby build",
     "serve": "gatsby serve -p 3002",
-    "clean": "gatsby clean"
+    "clean": "gatsby clean",
+    "test:contracts": "node --test tests/*.test.mjs",
+    "fixture": "node fixture/server.mjs"
   },
   "dependencies": {
     "@babel/types": "^7.21.2",
+    "@tanstack/react-query": "^5.90.20",
     "gatsby": "^5.6.1",
     "gatsby-plugin-image": "^3.6.0",
     "gatsby-plugin-sharp": "^5.6.0",
     "gatsby-source-filesystem": "^5.6.0",
     "gatsby-transformer-sharp": "^5.6.0",
-    "moment": "^2.29.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "tf-checkout-react": "^1.5.9"
+    "tf-checkout-react": "2.0.0-beta.28",
+    "dotenv": "^16.4.5"
   }
 }

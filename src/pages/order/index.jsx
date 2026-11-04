@@ -1,12 +1,9 @@
-import React from "react";
-import { OrderDetailsContainer } from "tf-checkout-react";
-import { setTfCheckoutReactConfigs } from "../../utils/tf-checkout-config";
+import React from 'react'
+import LegacyRouteNotice from '../../components/LegacyRouteNotice'
 
-setTfCheckoutReactConfigs()
-
-const Order = () => {
-    return <OrderDetailsContainer columns={[{ label: 'Items' }, { label: 'Price' }, { label: 'Quantity' }, { label: 'Total' }]} />
-
+export default function Order() {
+  return <LegacyRouteNotice title="Order details">
+    <p>Order details are unavailable until each request enforces the currently authorized buyer, including when a browser cookie changes outside the SDK.</p>
+    <p>See docs/account-and-resale.md for numeric order IDs, supported 2.x APIs, buyer isolation and ticket actions.</p>
+  </LegacyRouteNotice>
 }
-
-export default Order
